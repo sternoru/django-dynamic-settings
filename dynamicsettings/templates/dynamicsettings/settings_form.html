@@ -1,0 +1,17 @@
+{% load i18n %}
+
+<div class="settings-form-errors">
+	{{settings_form.non_field_errors}}
+</div>
+<form id="settings-form" action="{% url dynamicsettings_set %}" method="POST">
+    {% csrf_token %}
+    {% for field in settings_form %}
+    <div class="settings-form-field">
+        <div  class="settings-form-label">{{ field.label_tag }}</div>
+        <div>{{ field }}</div>
+    </div>
+    {% endfor %}
+    <div class="settings-form-field">
+        <input type="submit" value="{% trans 'Submit'%}" />
+    </div>
+</form>

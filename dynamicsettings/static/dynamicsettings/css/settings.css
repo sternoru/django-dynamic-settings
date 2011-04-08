@@ -1,0 +1,95 @@
+thead th {
+	white-space:nowrap;
+}
+
+.changelink, .deletelink {
+	color: #5b80b2;
+    text-decoration: none;
+	cursor: pointer;
+}
+
+.helptext-types-button {
+	width:10px;
+	height:10px;
+	float:right;
+	cursor:pointer;
+}
+
+#helptext-types {
+	display:none;
+}
+#helptext-types-title {
+	display:none;
+}
+
+.settings-form-cont {
+    display:none;
+}
+
+.settings-form-field {
+    clear:both;
+}
+
+.settings-form-field div{
+    float:left;
+}
+
+.settings-form-field .settings-form-label {
+    width:100px;
+}
+
+#settings-form-title {
+    display:none;
+}
+
+.helptext-types, .settings-form-dialog, .reset-error-dialog {
+	background:#FFFFFF;
+    text-align:center;
+    border:2px solid black;
+}
+
+.helptext-types {
+	width:500px !important;
+    height:100px !important;
+}
+
+.settings-form-dialog {
+    width:750px !important;
+    height:400px !important;
+}
+
+.reset-error-dialog {
+	width:500px !important;
+    height:70px !important;
+}
+
+.ui-dialog-titlebar{
+	padding:5px;
+}
+.ui-dialog-title {
+	font-weight:bold;
+}
+.ui-dialog-titlebar-close {
+    float:right;
+}
+.ui-dialog-title{
+    padding:5px;
+}
+
+.settings-form-dialog textarea {
+	width:600px;
+	height:200px;
+}
+
+#reset-error-title {
+	display:none;
+}
+
+#reset-error-content {
+	display:none;
+}
+
+#reset-error-form {
+	display:none;
+}
+

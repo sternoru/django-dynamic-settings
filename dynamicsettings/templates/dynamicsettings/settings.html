@@ -1,0 +1,96 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n %}
+
+{% block extrastyle %}
+    <link href="{{STATIC_URL}}dynamicsettings/css/settings.css" type="text/css" rel="stylesheet" />
+{% endblock %}
+
+{% block extrahead %}
+    <script src="{{STATIC_URL}}admin/js/jquery.min.js" type="text/javascript"></script>
+	<script src="{{STATIC_URL}}dynamicsettings/js/jqueryui/jquery.ui.core.min.js" type="text/javascript"></script>
+	<script src="{{STATIC_URL}}dynamicsettings/js/jqueryui/jquery.ui.widget.min.js" type="text/javascript"></script>
+	<script src="{{STATIC_URL}}dynamicsettings/js/jqueryui/jquery.ui.position.min.js" type="text/javascript"></script>
+	<script src="{{STATIC_URL}}dynamicsettings/js/jqueryui/jquery.ui.dialog.min.js" type="text/javascript"></script>
+    <script src="{{STATIC_URL}}dynamicsettings/js/settings.js" type="text/javascript"></script>
+{% endblock %}
+
+{% block title %}Dynamic settings{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <h1>Dynamic settings:</h1>
+  <table>
+  	    <thead>
+		<tr>
+		      <th>{% trans "Setting name" %}</th>
+		      <th>{% trans "Setting value" %}</th>
+		      <th>{% trans "Saved in Database?" %}</th>
+		</tr>
+		</thead>
+		<tbody>
+		{% for setting in settings %}
+		<tr>
+			<td>
+				<b>{{setting.key}}</b>
+				{% if setting.type == "tuple" or settings.type == "list" or setting.type == "dict" %}
+			    <img class="helptext-types-button" title="{% trans 'Why this looks different than in my settings file?'%}" src="{{STATIC_URL}}admin/img/admin/icon-unknown.gif" alt="?" />    
+			    {% endif %}
+			</td>
+			<td id="value-{{setting.key}}">{{setting.value}}</td>
+			<td>
+				{% if setting.can_change %}
+				<div id="indb-{{setting.key}}" {% if not setting.in_db %}style="display:none"{% endif %}>
+				    <img alt="{{setting.in_db}}" src="{{STATIC_URL}}admin/img/admin/icon-yes.gif" />
+				</div>
+				<div id="notindb-{{setting.key}}" {% if setting.in_db %}style="display:none"{% endif %}>
+				    <img alt="{{setting.in_db}}" src="{{STATIC_URL}}admin/img/admin/icon-no.gif" />
+				</div>
+				{% endif %}
+			</td>
+			<td>
+				 {% if setting.can_change %}
+			     <span id="change-{{setting.key}}" class="changelink" title="{% trans 'Change the value of the setting. Keep in mind that you can not change the type of it'%}">Change</span>
+			     {% endif %}
+			</td>
+			<td>
+				 {% if setting.can_change %}
+                 <span id="reset-{{setting.key}}" class="deletelink" title="{% trans 'Reset the value of the setting to its original value in the settings file.'%}">Reset</span>
+                 {% endif %}
+			</td>
+			<td id="type-{{setting.key}}" style="display:none;">{{setting.type}}</td>
+		</tr>		{% endfor %}
+		</tbody>
+  </table>
+</div>
+
+<!-- hidden help text containers -->
+<div id="helptext-types-title">
+	{% trans "Why this looks different than in my settings file?" %}
+</div>
+<div id="helptext-types">
+	{% trans "In order to correctly change settings which are saved as Python tuples, lists or dictionaries, these settings have to be serialized into a JSON string. When changing the setting please use valid JSON syntax to make it work."%}
+</div>
+
+<!-- hidden containers for handling the change of a setting -->
+<div id="settings-form-title">
+	{% trans "Change the setting and save it to the database" %}
+</div>
+<div id="settings-form-container">
+	<div class="settings-form-cont">
+		{{settings_form_rendered|safe}}
+	</div>
+</div>
+
+<!-- hidden containers for handling the reset of a setting -->
+<div id="reset-error-title">
+    {% trans "Error during reset" %}
+</div>
+<div id="reset-error-content"></div>
+<div id="reset-error-form">
+    <form action="{% url dynamicsettings_reset%}" method="POST">
+        {% csrf_token %}
+		<input type="hidden" id="id_key" name="key" value="" />
+    </form>
+</div>
+{% endblock %}
