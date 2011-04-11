@@ -1,25 +1,38 @@
+# -*- coding: utf-8 -*-
 
 #for now in views
 
+"""
+
+
+
+**Why this is using _dynamicsettings_... "private" functions instead
+of normal view functions?**
+
+Currenty (Django 1.3) there is a bug in the gehavior of django.test.client.Client
+handling cookies and sessions: http://code.djangoproject.com/ticket/10899 and
+http://code.djangoproject.com/ticket/15740.
+
+To use tests for this view which require a login (in this case via 
+staff_member_required decorator) are not working. Therefore to test
+these views, they are written into non decorated functions which are
+then called by the actual view function (with decorator). These undecorated
+functions are used for tests instead of the normal view functions. See 
+dynamicsettings.tests.urls.
+"""
+
 from django import shortcuts
 from django import forms
-from django.contrib.admin.views.decorators import staff_member_required
 from django.utils import simplejson
 from django import http
 from django.core.context_processors import csrf as csrf_processor
 from django import template
+from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.translation import ugettext as _
 
 from dynamicsettings import models
 from dynamicsettings import forms
 from dynamicsettings import settings
-
-"""
-class DynamicSettingsForm(forms.ModelForm):
-    GOOGLE_ACCOUNT_PASSWORD = forms.CharField(widget=forms.PasswordInput)
-    class Meta:
-        model = models.DynamicSettings
-"""
 
 @staff_member_required
 def dynamicsettings_index(request):
@@ -42,12 +55,11 @@ def dynamicsettings_index(request):
     form_dict.update(csrf_processor(request))
     settings_form_rendered = template.loader.render_to_string('dynamicsettings/settings_form.html', form_dict)
     content_dict = {
-        'settings': res,
-        'STATIC_URL': settings.STATIC_URL,
+        'dynamic_settings': res,
         'settings_form_rendered': settings_form_rendered,
     }
-    content_dict.update(csrf_processor(request))
-    return shortcuts.render_to_response('dynamicsettings/settings.html', content_dict)
+    return shortcuts.render_to_response('dynamicsettings/settings.html', content_dict,
+                                        context_instance=template.RequestContext(request))
 
 @staff_member_required
 def dynamicsettings_set(request):
@@ -78,7 +90,7 @@ def dynamicsettings_set(request):
                 'form': settings_form_rendered
             })
         return http.HttpResponse(simplejson.dumps(response_dict, indent=4), mimetype="text/plain")
-    raise http.Http404
+    return http.HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'TRACE', 'OPTIONS', 'CONNECT', 'PATCH'])
 
 @staff_member_required
 def dynamicsettings_reset(request):
@@ -106,4 +118,4 @@ def dynamicsettings_reset(request):
                     'message': _('The setting "%s" is not saved in the database or can not be reseted.' % request.POST['key']),
                 }
         return http.HttpResponse(simplejson.dumps(response_dict, indent=4), mimetype="text/plain")
-    raise http.Http404
+    return http.HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'TRACE', 'OPTIONS', 'CONNECT', 'PATCH'])

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 import pickle
 import base64
@@ -37,7 +38,6 @@ class DynamicSettings(object):
         if self.can_change(key):
             dynamic_setting, is_new = models.Settings.objects.get_or_create(key=key)
             dynamic_setting.value = base64.b64encode(pickle.dumps(value))
-            print dynamic_setting.value
             dynamic_setting.type = value_type
             dynamic_setting.save()
             #refresh the cache

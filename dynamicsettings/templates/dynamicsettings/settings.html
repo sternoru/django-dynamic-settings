@@ -29,7 +29,7 @@
 		</tr>
 		</thead>
 		<tbody>
-		{% for setting in settings %}
+		{% for setting in dynamic_settings %}
 		<tr>
 			<td>
 				<b>{{setting.key}}</b>
@@ -88,7 +88,7 @@
 </div>
 <div id="reset-error-content"></div>
 <div id="reset-error-form">
-    <form action="{% url dynamicsettings_reset%}" method="POST">
+    <form action="{% url dynamicsettings_reset %}" method="POST">
         {% csrf_token %}
 		<input type="hidden" id="id_key" name="key" value="" />
     </form>
