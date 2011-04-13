@@ -11,30 +11,6 @@ from dynamicsettings import settings as dynamic_settings
 from dynamicsettings import app_settings
 
 
-"""
-test:
-    - views:
-        - index view: status code, context is set, check a couple random 
-        settings are included or not, check for the values of these settings
-        (mainly if the type is the expected one)
-        - set view: 
-            - on success: status code, status message, check if setting is 
-            set properly in the database
-            - on error: status code, status message, check if setting is 
-            not set in the database
-        - reset view:
-            - on success: status code, status message, check if setting is 
-            reset properly in the database
-            - on error: status code, status message, check if setting is 
-            not reset in the database
-    - SettingsForm:
-        - submit some test data to the form and check if the validation is
-        as expected (some random settings, some with type change some
-        with none)
-    - dynamicsettings init: retrieval of a setting, setting of a setting, don"t
-    know what exaclty to check here since its similiar to the view
-"""
-
 class DynamicSettingsViewsTestCase(TestCase):
     urls = 'dynamicsettings.urls'
     
@@ -123,8 +99,91 @@ class DynamicSettingsViewsTestCase(TestCase):
         self.assertFalse(dynamic_settings.is_in_db('TEST_SETTING1'))
         self.assertEqual(dynamic_settings.TEST_SETTING1, 73)
         
-        #check another setting
+        #check second setting
+        response = self.client.post('/set/', {'key': 'TEST_SETTING2', 'value': 'my_custom_string', 'type': 'str'})
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'success')
+        self.assertEqual(content_json['value'], 'my_custom_string')
+        self.assertEqual(content_json['type'], 'str')
+        self.assertTrue(dynamic_settings.is_in_db('TEST_SETTING2'))
+        #change to the type
+        response = self.client.post('/set/', {'key': 'TEST_SETTING2', 'value': '123', 'type': 'int'})
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'error')
+        self.assertTrue(dynamic_settings.is_in_db('TEST_SETTING2'))
+        #check that the old value is still saved
+        self.assertEqual(dynamic_settings.TEST_SETTING2, 'my_custom_string')
+        dynamic_settings.reset('TEST_SETTING2')
+        self.assertFalse(dynamic_settings.is_in_db('TEST_SETTING2'))
+        self.assertEqual(dynamic_settings.TEST_SETTING2, 'a string')
         
+        #check third setting
+        response = self.client.post('/set/', {'key': 'TEST_SETTING3', 'value': '[4,5]', 'type': 'list'})
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'success')
+        self.assertEqual(content_json['value'].replace('\n','').replace(' ',''), '[4,5]')
+        self.assertEqual(content_json['type'], 'list')
+        self.assertTrue(dynamic_settings.is_in_db('TEST_SETTING3'))
+        #change the value to sth which doesnt look like a list
+        response = self.client.post('/set/', {'key': 'TEST_SETTING3', 'value': '{"d": 123}', 'type': 'list'})
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'error')
+        self.assertTrue(dynamic_settings.is_in_db('TEST_SETTING3'))
+        #check that the old value is still saved
+        self.assertEqual(dynamic_settings.TEST_SETTING3, [4, 5])
+        dynamic_settings.reset('TEST_SETTING3')
+        self.assertFalse(dynamic_settings.is_in_db('TEST_SETTING3'))
+        self.assertEqual(dynamic_settings.TEST_SETTING3, [1, 2, 3])
+        
+        #check fourth setting
+        response = self.client.post('/set/', {'key': 'TEST_SETTING4', 'value': '{"d": 123, "abc": "string", "l": []}', 'type': 'dict'})
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'success')
+        self.assertEqual(content_json['type'], 'dict')
+        self.assertTrue(dynamic_settings.is_in_db('TEST_SETTING4'))
+        #change the value and type to something completely different
+        response = self.client.post('/set/', {'key': 'TEST_SETTING4', 'value': '123', 'type': 'long'})
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'error')
+        self.assertTrue(dynamic_settings.is_in_db('TEST_SETTING4'))
+        #check that the old value is still saved
+        self.assertEqual(dynamic_settings.TEST_SETTING4, {"d": 123, "abc": "string", "l": []})
+        dynamic_settings.reset('TEST_SETTING4')
+        self.assertFalse(dynamic_settings.is_in_db('TEST_SETTING4'))
+        self.assertEqual(dynamic_settings.TEST_SETTING4, {'key': 'value', 'num': 3})
+        
+        #check last setting (NoneType - can be changed to anything)
+        response = self.client.post('/set/', {'key': 'TEST_SETTING5', 'value': u'你好', 'type': 'unicode'})
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'success')
+        self.assertEqual(content_json['value'], u'你好')
+        self.assertEqual(content_json['type'], 'unicode')
+        self.assertTrue(dynamic_settings.is_in_db('TEST_SETTING5'))
+        #check to another type (once a type is set it should not change anymore)
+        response = self.client.post('/set/', {'key': 'TEST_SETTING5', 'value': '300', 'type': 'int'})
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'error')
+        self.assertTrue(dynamic_settings.is_in_db('TEST_SETTING5'))
+        #change the type to list and value to something which doesnt look like a list
+        response = self.client.post('/set/', {'key': 'TEST_SETTING5', 'value': '404', 'type': 'list'})
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'error')
+        self.assertTrue(dynamic_settings.is_in_db('TEST_SETTING5'))
+        #check that the old value is still saved
+        self.assertEqual(dynamic_settings.TEST_SETTING5, u'你好')
+        dynamic_settings.reset('TEST_SETTING5')
+        self.assertFalse(dynamic_settings.is_in_db('TEST_SETTING5'))
+        self.assertEqual(dynamic_settings.TEST_SETTING5, None)
+        self.assertEqual(type(dynamic_settings.TEST_SETTING5).__name__, 'NoneType')
         
         self.client.logout()
     
@@ -137,13 +196,39 @@ class DynamicSettingsViewsTestCase(TestCase):
         #even a post request should not succeed
         response = self.client.post('/set/', {'key': 'TEST_SETTING1', 'value': 'some random string', 'type': 'int'})
         self.assertEqual(response.status_code, 200)
+        self.assertFalse(dynamic_settings.is_in_db('TEST_SETTING1'))
+        self.assertEqual(dynamic_settings.TEST_SETTING1, 73)
         self.client.logout()
+        #no need to test furhter settings
     
     def test_reset_view_staff(self):
         logged_in = self.client.login(username=self.staff['username'], password=self.staff['password'])
         self.assertTrue(logged_in)
         response = self.client.get('/reset/')
         self.assertEqual(response.status_code, 405)
+        
+        #set some setting
+        dynamic_settings.set('TEST_SETTING1', 500, 'int')
+        self.assertEqual(dynamic_settings.TEST_SETTING1, 500)
+        response = self.client.post('/reset/', {'key': 'TEST_SETTING1'})
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'success')
+        self.assertEqual(content_json['value'], 73)
+        self.assertEqual(content_json['type'], 'int')
+        self.assertEqual(dynamic_settings.TEST_SETTING1, 73)
+        #call view without key
+        response = self.client.post('/reset/')
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'error')
+        #reset a key wjhich is already reseted
+        response = self.client.post('/reset/', {'key': 'TEST_SETTING3'})
+        self.assertEqual(response.status_code, 200)
+        content_json = simplejson.loads(response.content)
+        self.assertEqual(content_json['status'], 'error')
+        self.assertEqual(dynamic_settings.TEST_SETTING1, 73)
+        
         self.client.logout()
     
     def test_reset_view_normal(self):
@@ -152,6 +237,15 @@ class DynamicSettingsViewsTestCase(TestCase):
         response = self.client.get('/reset/')
         #attempt to log the user into admin
         self.assertEqual(response.status_code, 200)
+        
+        dynamic_settings.set('TEST_SETTING1', 500, 'int')
+        self.assertEqual(dynamic_settings.TEST_SETTING1, 500)
+        response = self.client.post('/reset/', {'key': 'TEST_SETTING1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(dynamic_settings.TEST_SETTING1, 500)
+        dynamic_settings.reset('TEST_SETTING1')
+        self.assertEqual(dynamic_settings.TEST_SETTING1, 73)
+        
         self.client.logout()
 
 

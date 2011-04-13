@@ -81,23 +81,23 @@ class SettingsForm(forms.ModelForm):
             if value_type == 'tuple' and type(value).__name__!='tuple':
                 try:
                     if type(value).__name__ == 'dict':
-                        raise TypeError()
+                        raise TypeError
                     self.cleaned_data['value'] = tuple(value)
-                except ValueError, TypeError:
+                except (ValueError, TypeError):
                     raise forms.ValidationError(_(error_message_tmpl % ('tuple', 'a valid JSON string representing an Array (leading "["and traling "]")')))
             elif value_type == 'list' and type(value).__name__!='list':
                 try:
                     if type(value).__name__ == 'dict':
-                        raise TypeError()
+                        raise TypeError
                     self.cleaned_data['value'] = list(value)
-                except ValueError, TypeError:
+                except (ValueError, TypeError):
                     raise forms.ValidationError(_(error_message_tmpl % ('list', 'a valid JSON string representing an Array (leading "["and traling "]")')))
             elif value_type == 'dict' and type(value).__name__!='dict':
                 try:
                     if type(value).__name__ == 'list':
-                        raise TypeError()
+                        raise TypeError
                     self.cleaned_data['value'] = dict(value)
-                except ValueError, TypeError:
+                except (ValueError, TypeError):
                     raise forms.ValidationError(_(error_message_tmpl % ('dict', 'a valid JSON string representing an Object (leading "{"and traling "}")')))
         #c)
         value = self.cleaned_data['value']

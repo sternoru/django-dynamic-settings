@@ -87,6 +87,7 @@ def dynamicsettings_set(request):
             settings_form_rendered = template.loader.render_to_string('dynamicsettings/settings_form.html', form_dict)
             response_dict.update({
                 'status': 'error',
+                'message': settings_form.errors['__all__'],
                 'form': settings_form_rendered
             })
         return http.HttpResponse(simplejson.dumps(response_dict, indent=4), mimetype="text/plain")
