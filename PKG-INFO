@@ -1,0 +1,16 @@
+Name: django-minify
+Version: 0.1
+Summary: Application to handle settings within Django
+Home-page: 
+Author: Sterno.Ru
+Author-email: sterno.beijing@gmail.com
+License: UNKNOWN
+Download-URL: 
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Environment :: Web Environment
+Classifier: Programming Language :: Python
+Classifier: Framework :: Django
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Software Development :: Libraries :: Python Modules

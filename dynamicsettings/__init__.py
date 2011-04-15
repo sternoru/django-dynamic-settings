@@ -31,10 +31,12 @@ class DynamicSettings(object):
         if self._settings is None:
             self._get_settings()
     
-    def get(self, key, alternative=None):
-        return self._settings.get(key, alternative)
+    def get(self, key, default=None):
+        return self._settings.get(key, default)
     
-    def set(self, key, value, value_type):
+    def set(self, key, value, value_type=None):
+        if not value_type:
+            value_type = type(value).__name__
         if self.can_change(key):
             dynamic_setting, is_new = models.Settings.objects.get_or_create(key=key)
             dynamic_setting.value = base64.b64encode(pickle.dumps(value))
@@ -42,8 +44,8 @@ class DynamicSettings(object):
             dynamic_setting.save()
             #refresh the cache
             self._get_settings()
-            return True
-        return False
+            return dynamic_setting.value
+        raise KeyError('Setting "%s" can not be set in the database. If you want to change the setting add it to DYNAMICSETTINGS_INCLUDE_SETTINGS.' % key)
         
     def reset(self, key):
         if self.can_change(key):
