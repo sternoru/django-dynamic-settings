@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
       name='django-dynamic-settings',
       version='0.1',
-      description='Application to handle settings within Django.',
+      description='Application to handle live settings within Django.',
       author='Sterno.Ru',
       author_email='sterno.beijing@gmail.com',
       url='',

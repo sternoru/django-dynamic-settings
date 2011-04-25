@@ -1,6 +1,6 @@
 Name: django-minify
 Version: 0.1
-Summary: Application to handle settings within Django
+Summary: Application to handle live settings within Django
 Home-page: 
 Author: Sterno.Ru
 Author-email: sterno.beijing@gmail.com

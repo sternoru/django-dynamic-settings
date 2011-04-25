@@ -1,26 +1,5 @@
 # -*- coding: utf-8 -*-
 
-#for now in views
-
-"""
-
-
-
-**Why this is using _dynamicsettings_... "private" functions instead
-of normal view functions?**
-
-Currenty (Django 1.3) there is a bug in the gehavior of django.test.client.Client
-handling cookies and sessions: http://code.djangoproject.com/ticket/10899 and
-http://code.djangoproject.com/ticket/15740.
-
-To use tests for this view which require a login (in this case via 
-staff_member_required decorator) are not working. Therefore to test
-these views, they are written into non decorated functions which are
-then called by the actual view function (with decorator). These undecorated
-functions are used for tests instead of the normal view functions. See 
-dynamicsettings.tests.urls.
-"""
-
 from django import shortcuts
 from django import forms
 from django.utils import simplejson
@@ -36,6 +15,23 @@ from dynamicsettings import settings
 
 @staff_member_required
 def dynamicsettings_index(request):
+    """Renders a template in the admin to show a list of settings. 
+    
+    Params:
+        - ``request``: a django http request object
+        
+    Returns:
+        - a rendered template with the following variables
+          defined in its response dict
+              - ``dynamic_settings``: a list of settings represented
+              as dict's with:
+                  -  ``key`` - the name of the setting
+                  - ``value`` - the value of the setting
+                  - ``is_db`` - a boolean indicating if the setting is saved in the db or not
+                  - ``type`` - the (Python) type of the setting as its string representation
+                  - ``can_change`` - a boolean indicating if the setting can be saved in the database or not
+            - ``settings_form_rendered``: rendered html of ``forms.SettingsForm``
+    """
     keys = [key for key in settings.dict()]
     keys.sort()
     res = []
@@ -63,8 +59,25 @@ def dynamicsettings_index(request):
 
 @staff_member_required
 def dynamicsettings_set(request):
-    """
-    Handles the post request
+    """A view to handle the POST request to 
+    set a setting in the database
+    
+    Params:
+        - ``request``: a django http request object
+        
+    Returns:
+        - a response as JSON including the following fields:
+            - ``status``: "success" if the setting was saved in
+               the database, "error" in other cases
+            - on success:
+                - ``value``: the new value of the setting (which is
+                  saved in the database)
+                - ``type``: the new type of the setting, can only differ
+                   from the original type if it was ``NoneType``
+            - on error:
+                - ``message``: the message describing the error
+                - ``form``: the validated form rendered in a template
+                  (will show the error in the form)
     """
     if request.method=='POST':
         response_dict = {}
@@ -95,6 +108,23 @@ def dynamicsettings_set(request):
 
 @staff_member_required
 def dynamicsettings_reset(request):
+    """A view to handle the POST request to 
+    reset a setting in the database
+    
+    Params:
+        - ``request``: a django http request object
+        
+    Returns:
+        - a response as JSON including the following fields:
+            - ``status``: "success" if the setting was reset in
+               the database, "error" in other cases
+            - on success:
+                - ``value``: the original value of the setting (which is
+                  not saved in the database)
+                - ``type``: the original type of the setting
+            - on error:
+                - ``message``: the message describing the error
+    """
     if request.method=='POST':
         key = request.POST.get('key', None)
         if key is None:

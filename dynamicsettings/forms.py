@@ -10,6 +10,13 @@ from dynamicsettings import models
 from dynamicsettings import settings
 
 class SettingsForm(forms.ModelForm):
+    """Form class which helps to validate
+    a setting before it is saved in the database.
+    Have a closer look to the clean() method to 
+    find out more about the details when a setting
+    is rejected to be saved
+    """
+    
     class Meta:
         model = models.Settings
         
@@ -35,7 +42,6 @@ class SettingsForm(forms.ModelForm):
         each other (eg. value can;t be converted to type).
         c) check if the resulting value was actually changed  (and
         not yet in the database)
-        d) Pickle the value
         """
         error_message_tmpl = 'A setting from type %s must be set to %s.'
         key = self.cleaned_data['key']

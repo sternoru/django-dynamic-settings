@@ -19,11 +19,19 @@ ALLOWED_TYPES = ['NoneType', 'bool', 'dict', 'list', 'tuple',
 #will not trigger exceptions when syncdb or runserver
 #see django.conf.LazySettings
 class LazyDynamicSettings(LazyObject):
+    """Lazy wrapper for DynamicSettings.
+    """
     def _setup(self):
         self._wrapped = DynamicSettings()
     
     
 class DynamicSettings(object):
+    """A class which is handling the dynamic settings. 
+    It is similiar to Django's own conf.settings Settings
+    class, but also providing cached settings, setting and
+    reseting a setting in the database, returning settings
+    as a dict.
+    """
     
     def __init__(self):
         self._settings_cache_key = 'dynamicsettings.settings'
@@ -32,9 +40,42 @@ class DynamicSettings(object):
             self._get_settings()
     
     def get(self, key, default=None):
+        """Get a setting value for a partcular key (setting name).
+        Works similiar to a dict's ``get`` method.
+        
+        Params:
+            - ``key``: the name of setting
+            - ``default`` (optional): a default value if the setting can not be
+              retrieved, defaults to ``None``
+              
+        Returns:
+            - the ``value`` of the setting if exists or the value
+              specified in ``default``
+        """
         return self._settings.get(key, default)
     
     def set(self, key, value, value_type=None):
+        """Set a new value for a setting in the database. This
+        is only possible for settings defined in 
+        ``app_settings.DYNAMICSETTINGS_INCLUDE_SETTINGS``.
+        If a setting is set to its original value it will not attempt to 
+        save the "change" in the database (since its no real change).
+        
+        Params:
+            - ``key``: the name of the setting
+            - ``value``: new new value of the setting
+            - ``value_type`` (optional): tne new type of the value, if omitted it will
+              try to resolve the type from the value, should be a string
+              representing the (Python) type of the setting (for examome
+              'int', 'str', 'list' ...)
+              
+        Returns:
+            - the new value of the setting
+            
+        Raises:
+            - ``KeyError`` if the setting can not be set or is not allowed
+              to set
+        """
         if not value_type:
             value_type = type(value).__name__
         if self.can_change(key):
@@ -48,6 +89,18 @@ class DynamicSettings(object):
         raise KeyError('Setting "%s" can not be set in the database. If you want to change the setting add it to DYNAMICSETTINGS_INCLUDE_SETTINGS.' % key)
         
     def reset(self, key):
+        """Reset the value of a setting saved in the database.
+        Does not work for settings which are not saved in the database
+        of course.
+        
+        Params:
+            - ``key``: the name of the setting
+            
+        Returns:
+            - a boolean: ``True`` on success, ``False`` if the setting
+            could not be reset (either not allowed to reset or not saved
+            in the database)
+        """
         if self.can_change(key):
             try:
                 dynamic_setting = models.Settings.objects.get(key=key)
@@ -58,6 +111,18 @@ class DynamicSettings(object):
                 return False
     
     def dict(self, keys=None):
+        """Returns a dict representation of the settings
+        where the key is the name of the setting and the value
+        is its value.
+        
+        Params:
+            - ``keys`` (optional):  a list of setting names (as strings)
+              which should be included in the dict. If ommitted will show
+              all settings.
+        
+        Returns:
+            - a dict representing the settings
+        """
         if keys is None:
             return self._settings
         new_dict = {}
@@ -66,8 +131,14 @@ class DynamicSettings(object):
         return new_dict
     
     def is_in_db(self, key):
-        """
-        Check if a setting for a given key is saved in the Database
+        """Check if a setting for a given key is saved in the Database
+        
+        Params:
+            - ``key``: the name of the setting
+            
+        Returns:
+            - a boolean: ``True`` if setting is saved in the database,
+              ``False`` otherwise
         """
         try:
             models.Settings.objects.get(key=key)
@@ -76,13 +147,21 @@ class DynamicSettings(object):
         return True
 
     def can_change(self, key):
-        """
+        """Check if a setting for a given key can be changed in the Database
+        
         A setting can be change in the database if:
         a) its not in the global settings, but defined in the
         settings from DYNAMICSETTINGS_INCLUDE_MODULES
         OR 
         b) its defined in DYNAMICSETTINGS_INCLUDE_SETTINGS,
         even it is in the global settings
+        
+        Params:
+            - ``key``: the name of the setting
+            
+        Returns:
+            - a boolean: ``True`` if setting can be changed in the database,
+              ``False`` otherwise
         """
         try:
             setting_value = self.__getattr__(key)
@@ -109,16 +188,6 @@ class DynamicSettings(object):
             if settings_module is not None:
                 settings_dict = self._filter_settings(settings_module)
                 all_settings.update(settings_dict)
-        #third check for settings defined in DYNAMICSETTINGS_INCLUDE_SETTINGS
-        #and overwrite them
-        """
-        for setting_name in app_settings.DYNAMICSETTINGS_INCLUDE_SETTINGS:    
-            #try to get it from global settings (if its provided in DYNAMICSETTINGS_INCLUDE_MODULES
-            #it will be loaded already anyway
-            setting_value = None
-            settings_dict = {setting_name: django_settings.__getattr__(setting_name)}
-            all_settings.update(settings_dict)
-        """
         #and finally check within the db
         db_settings_dict = {}
         db_settings = models.Settings.objects.all()
@@ -151,3 +220,4 @@ class DynamicSettings(object):
 
  
 settings = LazyDynamicSettings()
+
