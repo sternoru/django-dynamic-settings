@@ -32,8 +32,8 @@
 		{% for setting in dynamic_settings %}
 		<tr>
 			<td>
-				<b>{{setting.key}}</b>
-				{% if setting.type == "tuple" or settings.type == "list" or setting.type == "dict" %}
+				<b>{{setting.key}}</b>		
+				{% if setting.type == "list" or setting.type == "dict" or setting.type == "tuple"%}
 			    <img class="helptext-types-button" title="{% trans 'Why this looks different than in my settings file?'%}" src="{{STATIC_URL}}admin/img/admin/icon-unknown.gif" alt="?" />    
 			    {% endif %}
 			</td>

@@ -85,7 +85,7 @@ class DynamicSettings(object):
             dynamic_setting.save()
             #refresh the cache
             self._get_settings()
-            return dynamic_setting.value
+            return True
         raise KeyError('Setting "%s" can not be set in the database. If you want to change the setting add it to DYNAMICSETTINGS_INCLUDE_SETTINGS.' % key)
         
     def reset(self, key):
