@@ -38,7 +38,10 @@ def dynamicsettings_index(request):
     for key in keys:  
         value = settings.get(key)
         if isinstance(value, (list, tuple, dict)):
-            value = simplejson.dumps(value, indent=4)
+            try:
+                value = simplejson.dumps(value, indent=4)
+            except TypeError:
+                value = 'Not a serializable object'
         res.append({
             'key': key,
             'value': value,
